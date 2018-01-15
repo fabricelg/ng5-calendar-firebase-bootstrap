@@ -1,0 +1,52 @@
+/* You can add global styles to this file, and also import other style files */
+
+@import url('https://fonts.googleapis.com/css?family=Raleway:300,700'); 
+@import url('https://unpkg.com/bootstrap@4.0.0-beta.3/dist/css/bootstrap.min.css'); 
+@import './app/css/angular-calendar.css'; 
+@import './app/css/font-awesome-4.7.0/css/font-awesome.css';
+
+ body {
+    /*
+    background:#f2f2f2;
+    */
+    padding: 3em;
+    font-family: 'Raleway', 'Arial';
+    /*color:#4e4e4e;*/
+}
+ul {
+    list-style-type:none;
+    margin:0 0 2em 0;
+    padding:0;
+}
+ul li {
+    display:inline;
+    margin-right: 30px;
+}
+ul li a {
+    font-size: 1.5em;
+}
+a {
+    /*color:#4e4e4e;*/
+    text-decoration:none;
+}   
+
+.container {
+    display: grid;
+    grid-template-columns: 50% auto;
+}
+.col {
+    padding: .4em 1.3em;
+}
+.color-dark {
+    background: #2885C4;
+}
+.color-light {
+    background: #57B3F1;
+}
+
+.life-container {
+    background:#3FA0E1;
+    padding:.5em;
+    font-weight:bold;
+    cursor:pointer;
+}
