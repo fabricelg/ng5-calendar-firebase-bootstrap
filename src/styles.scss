@@ -1,52 +1,163 @@
 /* You can add global styles to this file, and also import other style files */
 
 @import url('https://fonts.googleapis.com/css?family=Raleway:300,700'); 
-@import url('https://unpkg.com/bootstrap@4.0.0-beta.3/dist/css/bootstrap.min.css'); 
-@import './app/css/angular-calendar.css'; 
-@import './app/css/font-awesome-4.7.0/css/font-awesome.css';
+@import './assets/css/bootstrap.css';
+@import './assets/css/angular-calendar.css'; 
+@import './assets/css/angular-calendar-week-hours-view.scss'; 
+@import './assets/css/font-awesome.css';
+@import './assets/css/toastr.css'; 
+
+//@import url('https://unpkg.com/bootstrap-material-design@4.0.0-beta.4/dist/css/bootstrap-material-design.min.css'); 
 
  body {
     /*
-    background:#f2f2f2;
-    */
-    padding: 3em;
     font-family: 'Raleway', 'Arial';
-    /*color:#4e4e4e;*/
-}
-ul {
-    list-style-type:none;
-    margin:0 0 2em 0;
-    padding:0;
-}
-ul li {
-    display:inline;
-    margin-right: 30px;
-}
-ul li a {
-    font-size: 1.5em;
-}
-a {
-    /*color:#4e4e4e;*/
-    text-decoration:none;
-}   
-
-.container {
-    display: grid;
-    grid-template-columns: 50% auto;
-}
-.col {
-    padding: .4em 1.3em;
-}
-.color-dark {
-    background: #2885C4;
-}
-.color-light {
-    background: #57B3F1;
+    color:#4e4e4e;
+    */
+    
 }
 
-.life-container {
-    background:#3FA0E1;
-    padding:.5em;
-    font-weight:bold;
-    cursor:pointer;
+.table th, .table td {
+    vertical-align: middle !important;
+}
+
+// Debut Bootstrap
+.starter-template {
+    padding: 3rem 1.5rem;
+    text-align: center;
+}
+
+.top5 { margin-top:5px; }
+.top10 { margin-top:10px; }
+.top15 { margin-top:15px; }
+.top20 { margin-top:20px; }
+.top25 { margin-top:25px; }
+.top30 { margin-top:30px; }
+
+label {
+    //margin-bottom: .5rem;
+    //margin-top: .5rem;
+}
+// Fin Bootstrap
+
+// Style Calendar
+.text-red{
+    color: red;
+}
+
+.cal-week-hours-view .cal-day-headers:hover {
+  background-color: #fafafa; }
+
+.cal-day-headers .cal-header:hover{
+  cursor: pointer;  
+  background-color: #ededed;
+}
+.cal-header span{
+  display: none;  
+}
+
+//Tooltip
+.tooltip-custom{
+    text-align: left;
+    display: inherit;
+}
+
+// View Day : arrondis des vents
+.cal-day-view .cal-starts-within-day .cal-event {
+    border-top-left-radius: 2px !important;
+    border-top-right-radius: 2px !important; 
+}
+.cal-day-view .cal-ends-within-day .cal-event {
+    border-bottom-left-radius: 2px !important;
+    border-bottom-right-radius: 2px !important; 
+}
+
+// View Day : supprimer scroll inactif en bas des div
+.cal-day-view .cal-hour-rows {
+    overflow-x: hidden !important;
+}
+
+// View Day : espacement
+.cal-day-view .cal-event {
+    text-overflow: initial !important;
+    height: 99.5% !important;
+}
+
+// View Month : hauteur cellule
+.cal-month-view .cal-day-cell {
+    min-height: 160px !important;
+}
+
+// View Month
+.cal-month-view .cal-day-number:hover {
+    font-weight: bold;
+    cursor: pointer;
+}
+// VieW Month : Text event
+.cal-month-view .cal-event {
+    width: auto !important;
+    border-radius: 0.25rem !important;
+    display: inline-block !important;
+    margin: 2px !important;
+    height: auto !important;
+    padding: 5px !important;
+    vertical-align: text-bottom !important;
+    color: white !important;
+    font-size: 12px;
+}
+
+// Viex Month : slider - Text event
+.cal-month-view .cal-open-day-events .cal-event {
+    margin: 7px !important;
+}
+
+//Styles Modal Bootstrap
+.modal-backdrop.show{
+  z-index: 1050 !important;
+}
+  
+.modal-body {
+    //max-height: calc(100vh - 210px);
+    overflow-y: auto;
+}
+
+.modal-full .modal-dialog {
+    max-width: 100%;
+    height: 100%;
+    margin: 0px
+}
+.modal-full .modal-content {
+    //background-color: #292b2c;
+    //color: white;
+    height: 100%;
+}
+
+.modal { overflow: auto !important; }
+
+.search-results {
+    height: 50rem;
+    overflow: scroll;
+}
+.modal-reservations {
+    height: 55rem;
+    overflow-y: scroll;
+}
+
+//Style OrderBy
+thead th {
+  cursor: pointer;
+  margin-right: 15px;
+  margin-left: 15px;
+
+  span {
+    visibility: hidden;
+  }
+
+  &.active {
+    color: #000;
+
+    span {
+      visibility: visible;
+    }
+  }
 }

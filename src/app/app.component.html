@@ -1,9 +1,34 @@
 <!--The content below is only a placeholder and can be replaced.-->
 
-<ul>
-  <li><a routerLink="">Home</a></li>
-  <li><a routerLink="about/48">About</a></li>
-  <li><a routerLink="reservations">Réservation</a></li>
-</ul>
 
-<router-outlet></router-outlet>
+<div *ngIf="!(authService.user | async)" class="container">
+  <app-login></app-login>
+</div>
+
+<div *ngIf="authService.user | async">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-info">
+    <a class="navbar-brand" routerLinkActive="active" routerLink="" alt="Accueil"><img src="./assets/images/logo.png" style="width: 40px"></a>
+    <button class="navbar-toggler btn btn-outline-info" type="button" data-toggle="collapse" (click)="isCollapsed = !isCollapsed" [attr.aria-expanded]="!isCollapsed"  data-target="#navbarTogglerDemo02" aria-label="Toggle navigation" aria-controls="navbarTogglerDemo02">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarTogglerDemo02" [ngbCollapse]="isCollapsed">
+      <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
+        <li class="nav-item">
+          <a class="nav-link" routerLinkActive="active" routerLink="reservation" (click)="isCollapsed = !isCollapsed">Réservation</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLinkActive="active" routerLink="plongeur" (click)="isCollapsed = !isCollapsed">Plongeur</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLinkActive="active" routerLink="moniteur" (click)="isCollapsed = !isCollapsed">Moniteur</a>
+        </li>
+      </ul>
+      <label class="text-white">Bienvenue {{(authService.user | async)?.email}} ! </label>&nbsp;
+      <button class="btn btn-danger my-2 my-sm-0" (click)="logout()" (click)="isCollapsed = !isCollapsed">Déconnexion</button>
+      &nbsp;
+      <button class="btn btn-secondary my-2 my-sm-0" routerLinkActive="active" routerLink="signup"  (click)="isCollapsed = !isCollapsed">Inscription</button>
+    </div>
+  </nav>
+  <router-outlet></router-outlet>
+</div>

@@ -1,6 +1,6 @@
 import { AppPage } from './app.po';
 
-describe('ng5-calendar App', () => {
+describe('ng5-calendar-firebase App', () => {
   let page: AppPage;
 
   beforeEach(() => {

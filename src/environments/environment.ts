@@ -5,4 +5,12 @@
 
 export const environment = {
   production: false,
+  firebase: {
+    apiKey: "AIzaSyAU_GH11hMH0aKlOPPYrQgiObqYqwPU-Uk",
+    authDomain: "divingng5.firebaseapp.com",
+    databaseURL: "https://divingng5.firebaseio.com",
+    projectId: "divingng5",
+    storageBucket: "divingng5.appspot.com",
+    messagingSenderId: "828740229355",
+  }
 };
