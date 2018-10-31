@@ -1,0 +1,8 @@
+<div class="row top30">
+  <div class="col-md-4 mx-auto">
+    <h2>Nouveau compte</h2>
+    <input type="email" class="form-control  btn-block" [(ngModel)]="email" placeholder="Email" required autofocus>
+    <input type="password" class="form-control btn-block" [(ngModel)]="password" placeholder="Mot de passe" required>
+    <button class="btn btn-outline-secondary btn-block" (click)="signup()" [disabled]="!email || !password">Enregistrer</button>
+  </div>
+</div>

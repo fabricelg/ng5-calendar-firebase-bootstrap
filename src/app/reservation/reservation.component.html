@@ -1,0 +1,572 @@
+
+<div class="container-fluid">
+  <div class="row text-center" [@moveInLeft]="state">
+    <div class="col-md-4 top10">
+      <div class="btn-group">
+        <div
+          class="btn btn-info"
+          mwlCalendarPreviousView
+          [view]="view"
+          [(viewDate)]="viewDate"
+          (viewDateChange)="activeDayIsOpen = false">
+          Précédent
+        </div>
+        <div
+          class="btn btn-outline-secondary"
+          mwlCalendarToday
+          [(viewDate)]="viewDate">
+          Aujourd'hui
+        </div>
+        <div
+          class="btn btn-info"
+          mwlCalendarNextView
+          [view]="view"
+          [(viewDate)]="viewDate"
+          (viewDateChange)="activeDayIsOpen = false">
+          Suivant
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4 top10">
+      <h3>{{ viewDate | calendarDate:(view + 'ViewTitle'): locale }}</h3>
+    </div>
+    <div class="col-md-4 top10">
+      <div class="btn-group">
+        <div
+          class="btn btn-info"
+          (click)="view = 'month'"
+          [class.active]="view === 'month'">
+          Mois
+        </div>
+        
+        <div
+          class="btn btn-info"
+          (click)="view = 'week'"
+          [class.active]="view === 'week'">
+          Semaine
+        </div>
+        <div
+          class="btn btn-info"
+          (click)="view = 'day'"
+          [class.active]="view === 'day'">
+          Jour
+        </div>
+      </div>
+    </div>
+    <!--
+    <div class="col-md-3 top10">
+      <div class="btn btn-outline-info" (click)="onAdd()">
+        Ajouter une réservation
+      </div>
+    </div>
+    -->
+  </div>
+  <br>
+  <div [ngSwitch]="view" [@fallIn]="state">
+    <mwl-calendar-month-view
+      *ngSwitchCase="'month'"
+      [viewDate]="viewDate"
+      [events]="events"
+      [refresh]="refresh"
+      [activeDayIsOpen]="activeDayIsOpen"
+      (dayClicked)="dayClicked($event.day)"
+      (eventClicked)="handleEvent('Clicked', $event.event)"
+      (eventTimesChanged)="eventTimesChanged($event)"
+      [locale]="locale"
+      [cellTemplate]="monthCellTemplate">
+    </mwl-calendar-month-view>
+    <iq-calendar-week-hours-view
+        *ngSwitchCase="'week'"
+        [viewDate]="viewDate"
+        [events]="events"
+        [refresh]="refresh"
+        (eventClicked)="handleEvent('Clicked', $event.event)"
+        (eventTimesChanged)="eventTimesChanged($event)"
+        [locale]="locale"
+        [dayStartHour]="8"
+        [dayEndHour]="21"
+        [hourSegments]="2"
+        [weekStartsOn]="1"
+        (hourSegmentClicked)="hourSegmentClicked($event.date)"
+        (dayHeaderClicked)="viewDate = $event.day.date; view = 'day'"
+        >
+    </iq-calendar-week-hours-view>
+    <mwl-calendar-day-view
+      *ngSwitchCase="'day'"
+      [viewDate]="viewDate"
+      [events]="events"
+      [refresh]="refresh"
+      (eventClicked)="handleEvent('Clicked', $event.event)"
+      (eventTimesChanged)="eventTimesChanged($event)"
+      [locale]="locale"
+      [dayStartHour]="8"
+      [dayEndHour]="21"
+      [hourSegments]="2"
+      (hourSegmentClicked)="hourSegmentClicked($event.date)"
+      ><!--[hourSegmentTemplate]="dayHourSegmentTemplate"-->
+    </mwl-calendar-day-view>
+  </div>
+</div>
+
+<context-menu #basicMenu>
+  <ng-template contextMenuItem (execute)="addEvent($event.item)">
+    Ajouter
+  </ng-template>
+</context-menu>
+
+<ng-template
+  #monthCellTemplate
+  let-day="day"
+  let-openDay="openDay"
+  let-locale="locale"
+  let-tooltipPlacement="tooltipPlacement"
+  let-highlightDay="highlightDay"
+  let-unhighlightDay="unhighlightDay"
+  let-eventClicked="eventClicked">
+
+  <div class="fill-height" [contextMenu]="basicMenu" [contextMenuSubject]="day.date" (mouseenter)="day.showAddEvent = true" (mouseleave)="day.showAddEvent = false">
+    <div class="cal-cell-top">
+      <span class="cal-day-badge" *ngIf="day.badgeTotal > 0">{{ day.badgeTotal }}</span>
+      <span class="cal-day-add" *ngIf="day.showAddEvent" (click)="addEvent(day.date)"><i class="fa fa-plus"></i></span>
+      <span class="cal-day-number" (click)="viewDate = day.date; view = 'day'">{{ day.date | calendarDate:'monthViewDayNumber':locale }}</span>
+    </div>
+    <div class="cal-events" *ngFor="let event of day.events |orderBy: orderEvent">
+      <div
+        class="cal-event"
+        [style.backgroundColor]="event.color.primary"
+        [ngClass]="event?.cssClass"
+        (mouseenter)="highlightDay.emit({event: event})"
+        (mouseleave)="unhighlightDay.emit({event: event})"
+        [mwlCalendarTooltip]="event.title | calendarEventTitle:'monthTooltip':event"
+        [tooltipPlacement]="tooltipPlacement"
+        (click)="$event.stopPropagation(); eventClicked.emit({event: event});">
+        <b>{{event.start | date : 'HH:mm'}}</b>
+        Tot:{{getTotalPlongeurs(event.plongeurs) + getTotalMoniteurs(event.moniteurs)}}<!-- (M: {{moniteurCount}}, P: {{plongeurCount}})-->
+        <i>{{event.title}}</i>
+      </div>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #weekHeaderTemplate let-days="days" let-locale="locale" let-dayHeaderClicked="dayHeaderClicked">
+  <div class="cal-day-headers">
+    <div
+      class="cal-header"
+      *ngFor="let day of days"
+      [class.cal-past]="day.isPast"
+      [class.cal-today]="day.isToday"
+      [class.cal-future]="day.isFuture"
+      [class.cal-weekend]="day.isWeekend"
+      [class.cal-drag-over]="day.dragOver"
+      (click)="dayHeaderClicked.emit({day: day})"
+      [contextMenu]="basicMenu"
+      [contextMenuSubject]="day.date">
+      <b>{{ day.date | calendarDate:'weekViewColumnHeader':locale }}</b><br>
+      <span>{{ day.date | calendarDate:'weekViewColumnSubHeader':locale }}</span>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #dayHourSegmentTemplate let-segment="segment" let-locale="locale">
+  <div
+    class="cal-hour-segment"
+    [ngClass]="segment.cssClass"
+    [contextMenu]="basicMenu"
+    [contextMenuSubject]="segment.date">
+    <div [hidden]="!segment.isStart" class="cal-time">
+      {{ segment.date | calendarDate:'dayViewHour':locale }}
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #modalContent let-close="close">
+  <div class="modal-header">
+    <h5 class="modal-title">Event action occurred</h5>
+    <button type="button" class="btn btn-outline-info" (click)="close()">
+      <i class="fa fa-times"></i>
+    </button>
+  </div>
+  <div class="modal-body">
+    <div>
+      Action:
+      <pre>{{ modalData?.action }}</pre>
+    </div>
+    <div>
+      Event:
+      <pre>{{ modalData?.event | json }}</pre>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-outline-secondary" (click)="close()">OK</button>
+  </div>
+</ng-template>
+
+<ng-template #modalConfirm let-close="close">
+  <div class="modal-header" [@moveInLeft]="state">
+    <h5 class="modal-title">Supprimer</h5>
+    <button type="button" class="btn btn-outline-info" (click)="close()">
+      <i class="fa fa-times"></i>
+    </button>
+  </div>
+   <div class="modal-body" [@fallIn]="state">
+    <div class="row">
+      <div class="col-md-12">
+        Etes-vous sûr de vouloir supprimer cette réservation ?
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12 text-right">
+        <button class="btn btn-outline-success" type="button" (click)="isDelete(true)">
+          <i class="fa fa-check"></i>
+          Oui</button>
+        <button class="btn btn-outline-danger" type="button" (click)="isDelete(false)">
+          <i class="fa fa-times"></i>
+          Non</button>
+      </div>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #modalEvent let-close="close">
+  <div class="modal-header" [@moveInLeft]="state">
+    <h5 class="modal-title">{{reservationTextEdit}}</h5>
+    <button type="button" class="btn btn-outline-info" (click)="close()">
+      <i class="fa fa-times"></i>
+    </button>
+  </div>
+  <div class="modal-body modal-reservations" [@fallIn]="state">
+    <div class="row">
+      <div class="col-md-3 top20"></div>
+      <div class="col-md-6 top20">
+        <input type="hidden" name="$key" #$key="ngModel" [(ngModel)]="reservationService.selectedReservation.$key">
+        <label>Titre</label>
+        <input type="text" name="title" class="form-control" [(ngModel)]="reservationService.selectedReservation.title"  (ngModelChange)="refresh.next()">
+      </div>
+      <div class="col-md-3 top20"></div>
+    </div>
+    <div class="row text-center">
+      <div class="col-md-3 top20"></div>
+      <div class="col-md-3 top20">
+        <label>Couleur 1</label>
+        <input type="color" name="primary" [(ngModel)]="reservationService.selectedReservation.color.primary" (ngModelChange)="refresh.next()">
+      </div>
+      <div class="col-md-3 top20">
+        <label>Couleur 2</label>
+        <input type="color" name="secondary" [(ngModel)]="reservationService.selectedReservation.color.secondary" (ngModelChange)="refresh.next()">
+      </div>
+      <div class="col-md-3 top20"></div>
+    </div>
+    <hr>
+    <div class="row">
+      <div class="col-md-3 top20"></div>
+      <div class="col-md-3 top20">
+        <label>Date de début</label>
+        <mwl-utils-date-time-picker name="start" [(ngModel)]="reservationService.selectedReservation.start" placeholder="Not set" (ngModelChange)="refresh.next()">
+        </mwl-utils-date-time-picker>
+      </div>
+      <div class="col-md-3 top20">
+        <label>Date de fin</label>
+        <mwl-utils-date-time-picker name="end" [(ngModel)]="reservationService.selectedReservation.end" placeholder="Not set" (ngModelChange)="refresh.next()">
+        </mwl-utils-date-time-picker>
+      </div>
+      <div class="col-md-3 top20"></div>
+    </div>
+    <div *ngIf="reservationService.selectedReservation.start >= reservationService.selectedReservation.end
+        || reservationService.selectedReservation.start.getHours() < 8
+        ||((reservationService.selectedReservation.start.getHours() == 19 && reservationService.selectedReservation.start.getMinutes() > 0) || reservationService.selectedReservation.start.getHours() > 19)
+        || reservationService.selectedReservation.end.getHours() < 9
+        || ((reservationService.selectedReservation.end.getHours() == 22 && reservationService.selectedReservation.end.getMinutes() > 0) || reservationService.selectedReservation.end.getHours() > 22)" 
+        class="row">
+      <div class="col-md-3 top20"></div>
+      <div class="col-md-6 top20 alert alert-danger">
+        <div *ngIf="reservationService.selectedReservation.start >= reservationService.selectedReservation.end" class="col-md-12">
+          La date de début doit être inférieure à la date de fin.
+        </div>
+        <div *ngIf="reservationService.selectedReservation.start.getHours() < 8" class="col-md-12">
+          L'heure de début doit être supérieure ou égale à 8h.
+        </div>
+        <div *ngIf="((reservationService.selectedReservation.start.getHours() == 19 && reservationService.selectedReservation.start.getMinutes() > 0) || reservationService.selectedReservation.start.getHours() > 19)" class="col-md-12">
+          L'heure de début doit être inférieure ou égale à 19h.
+        </div>
+        <div *ngIf="reservationService.selectedReservation.end.getHours() < 9" class="col-md-12">
+          L'heure de fin doit être supérieure ou égale à 9h00.
+        </div>
+        <div *ngIf="(reservationService.selectedReservation.end.getHours() == 22 && reservationService.selectedReservation.end.getMinutes() > 0) || reservationService.selectedReservation.end.getHours() > 22"
+          class="col-md-12">
+          L'heure de fin doit être inférieure ou égale à 22h00.
+        </div>
+      </div>
+      <div class="col-md-3 top20"></div>
+    </div>
+    <hr>
+    <div class="row">
+      <div class="col-md-3 top20"></div>
+      <div class="col-md-6 top20">
+        <label>Nombre total : {{plongeurCount + moniteurCount}}</label>
+      </div>
+      <div class="col-md-3 top20"></div>
+    </div>
+    <div class="row">
+      <div class="col-md-3 top20"></div>
+      <div class="col-md-3 top20">
+        <label>Nombre de plongeur{{plongeurCount > 1 ? 's' : ''}} : {{plongeurCount}}</label>
+      </div>
+      <div class="col-md-3 top20">
+        <label>Nombre de moniteur{{moniteurCount > 1 ? 's' : ''}} : {{moniteurCount}}</label>
+      </div>
+      <div class="col-md-3 top20"></div>
+    </div>
+    <hr>
+    <div class="row">
+      <div class="col-md-12 top20">
+        <label>Plongeur{{plongeurCount > 1 ? 's' : ''}} participant{{plongeurCount > 1 ? 's' : ''}}</label>
+        <span style="padding-left: 5px">&nbsp;</span>
+        <button class="btn btn-outline-info my-2 my-sm-0" (click)="showModalPlongeur()">
+          <i class="fa fa-plus fa-stack"></i>Ajouter
+        </button>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12 top20">
+        <div class="table-responsive">
+          <table class="table table-hover top20"[@fallIn]="state">
+            <thead>
+              <tr>
+                <th>Nom</th>
+                <th>Prénom</th>
+                <th>Téléphone</th>
+                <th>Certificat</th>
+                <th>Brevet</th>
+                <th>Nb</th>
+                <th>Photo</th>
+                <th>Nitrox</th>
+                <th>Accompte</th>
+                <th>Commentaire</th>
+                <th>&nbsp;</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let plongeur of reservationPlongeurs">
+                <td>{{plongeur.nom}}</td>
+                <td>{{plongeur.prenom}}</td>
+                <td>{{plongeur.telephone}}</td>
+                <td>{{plongeur.certificat | date : 'dd/MM/yyyy' }}</td>
+                <td>{{plongeur.brevet}}</td>
+                <td><input type="number" style="width: 80px" class="form-control" name="nb" min="1" oninput="this.value = Math.abs(this.value)" (ngModelChange)="setCountPlongeur($event, reservationService.selectedReservation.plongeurs[plongeur.$key].nb)" [(ngModel)]="reservationService.selectedReservation.plongeurs[plongeur.$key].nb" placeholder="Nb" size="2"></td>
+                <td>
+                  <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" name="photo" id="customCheck1{{plongeur.$key}}" #position="ngModel" [(ngModel)]="reservationService.selectedReservation.plongeurs[plongeur.$key].photo" >
+                    <label class="custom-control-label" for="customCheck1{{plongeur.$key}}">{{reservationService.selectedReservation.plongeurs[plongeur.$key].photo ? 'Oui' : 'Non'}}</label>
+                  </div>
+                  <!--input type="checkbox" class="form-control" style="display:inline" name="photo" [(ngModel)]="plongeur.photo">{{plongeur.photo ? 'Oui' : 'Non'}}-->
+                </td>
+                <td>
+                  <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" name="nitrox" id="customCheck2{{plongeur.$key}}" #position="ngModel" [(ngModel)]="reservationService.selectedReservation.plongeurs[plongeur.$key].nitrox" >
+                    <label class="custom-control-label" for="customCheck2{{plongeur.$key}}">{{reservationService.selectedReservation.plongeurs[plongeur.$key].nitrox ? 'Oui' : 'Non'}}</label>
+                  </div>
+                  <!--input type="checkbox" class="form-control" style="display:inline" name="nitrox" [(ngModel)]="plongeur.nitrox">{{plongeur.nitrox ? 'Oui' : 'Non'}}-->
+                </td>
+                <td>
+                    <select class="form-control" name="accompte" [(ngModel)]="reservationService.selectedReservation.plongeurs[plongeur.$key].accompte" placeholder="">
+                      <option></option>
+                      <option>En attente</option>
+                      <option>Payé</option>
+                    </select>
+                </td>
+                <td><textarea class="form-control" rows="2" name="commentaire" [(ngModel)]="reservationService.selectedReservation.plongeurs[plongeur.$key].commentaire" placeholder="Commentaire"></textarea></td>
+                <td>
+                  <button class="btn btn-outline-info  my-2 my-sm-0 pull-right" (click)="deletePlongeur(plongeur)">
+                    <i class="fa fa-times"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6 top20">
+        <label>Moniteur{{moniteurCount > 1 ? 's' : ''}} participant{{moniteurCount > 1 ? 's' : ''}}</label>
+        <span style="padding-left: 5px">&nbsp;</span>
+        <button class="btn btn-outline-info  my-2 my-sm-0" (click)="showModalMoniteur()">
+          <i class="fa fa-plus fa-stack"></i>Ajouter
+        </button>
+      </div>
+      <div class="col-md-6 top20"></div>
+    </div>
+    <div class="row">
+      <div class="col-md-6 top20">
+        <div class="table-responsive" *ngIf="moniteurCount > 0">
+          <table class="table table-hover top20" [@fallIn]="state">
+            <thead>
+              <tr>
+                <th>Nom</th>
+                <th>Prénom</th>
+                <th>&nbsp;</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let moniteur of reservationMoniteurs">
+                <td>{{moniteur.nom}}</td>
+                <td>{{moniteur.prenom}}</td>
+                <td>
+                  <button class="btn btn-outline-info  my-2 my-sm-0 pull-right" (click)="deleteMoniteur(moniteur)">
+                    <i class="fa fa-times"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="col-md-6 top20"></div>
+    </div>
+    <div class="row top20">
+      <div class="col-md-12 text-right">
+        <button class="btn btn-outline-success" type="button" (click)="onSubmit()" 
+          [disabled]="reservationService.selectedReservation.start >= reservationService.selectedReservation.end
+            || reservationService.selectedReservation.start.getHours() < 8
+            ||((reservationService.selectedReservation.start.getHours() == 19 && reservationService.selectedReservation.start.getMinutes() > 0) || reservationService.selectedReservation.start.getHours() > 19)
+            || reservationService.selectedReservation.end.getHours() < 9
+            || ((reservationService.selectedReservation.end.getHours() == 22 && reservationService.selectedReservation.end.getMinutes() > 0) || reservationService.selectedReservation.end.getHours() > 22)">
+          <i class="fa fa-check"></i>
+          Enregistrer
+        </button>
+        <button class="btn btn-outline-secondary" type="button" (click)="close()">
+          <i class="fa fa-times"></i>
+          Annuler
+        </button>
+        <button class="btn btn-outline-danger" type="button" (click)="onDelete(reservationService.selectedReservation)" *ngIf="reservationTextAbort == 'Supprimer'">
+          <i class="fa fa fa-trash"></i>
+          {{reservationTextAbort}}
+        </button>
+      </div>
+    </div>
+    <div class="row top20 pull-right">
+      <div class="col-md-12">
+        Créé le {{reservationService.selectedReservation.createdAt | date : 'dd/MM/yyyy'}} à {{reservationService.selectedReservation.createdAt | date : 'HH:mm'}}, 
+        mis à jour le {{reservationService.selectedReservation.updatedAt | date : 'dd/MM/yyyy'}} à {{reservationService.selectedReservation.updatedAt | date : 'HH:mm'}}.
+      </div>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #modalAddPlongeur let-close="close">
+  <div class="modal-header" [@moveInLeft]="state">
+    <h5 class="modal-title">Sélectionner les plongeurs</h5>
+    <button type="button" class="btn btn-outline-info" (click)="close()">
+      <i class="fa fa-times"></i>
+    </button>
+  </div>
+   <div class="modal-body">
+    <div class="row top20">
+      <div class="col-md-12">
+        <input class="form-control" name="term" [(ngModel)]="term" placeholder="Rechercher">
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover top20" [@fallIn]="state">
+        <thead>
+          <tr>
+            <th [class.active]="order === 'nom'" (click)="setOrder('nom')">Nom
+              <span [hidden]="reverse">&#9660;</span><span [hidden]="!reverse">&#9650;</span>
+            </th>
+            <th [class.active]="order === 'prenom'" (click)="setOrder('prenom')">Prénom
+              <span [hidden]="reverse">&#9660;</span><span [hidden]="!reverse">&#9650;</span>
+            </th>
+            <th [class.active]="order === 'telephone'" (click)="setOrder('telephone')">Téléphone
+              <span [hidden]="reverse">&#9660;</span><span [hidden]="!reverse">&#9650;</span>
+            </th>
+            <th [class.active]="order === 'certificat'" (click)="setOrder('certificat')">Certificat
+              <span [hidden]="reverse">&#9660;</span><span [hidden]="!reverse">&#9650;</span>
+            </th>
+            <th [class.active]="order === 'brevet'" (click)="setOrder('brevet')">Brevet
+              <span [hidden]="reverse">&#9660;</span><span [hidden]="!reverse">&#9650;</span>
+            </th>
+            <th style="cursor:default">&nbsp;</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let plongeur of plongeurs | filter:term:['nom', 'prenom', 'telephone', 'certificat', 'brevet'] 
+                                                | orderBy: order : reverse : 'case-insensitive'
+                                                | paginate: { id: 'paginationPlongeurModal', itemsPerPage: 10, currentPage: pagePlongeurModal }">
+            <td>{{plongeur.nom}}</td>
+            <td>{{plongeur.prenom}}</td>
+            <td>{{plongeur.telephone}}</td>
+            <td>{{plongeur.certificat | date : 'dd/MM/yyyy'}}</td>
+            <td>{{plongeur.brevet}}</td>
+            <td><button class="btn btn-outline-success" type="button" (click)="addPlongeur(plongeur)"><i class="fa fa-plus"></i></button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="row top20 pull-right">
+      <div class="col-md-12">
+        <pagination-controls (pageChange)="pagePlongeurModal = $event"
+          id="paginationPlongeurModal"
+          directionLinks="true"
+          autoHide="true"
+          previousLabel="Précédent"
+          nextLabel="Suivant"
+        ></pagination-controls>
+      </div>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #modalAddMoniteur let-close="close">
+  <div class="modal-header" [@moveInLeft]="state">
+    <h5 class="modal-title">Sélectionner les moniteurs</h5>
+    <button type="button" class="btn btn-outline-info" (click)="close()">
+      <i class="fa fa-times"></i>
+    </button>
+  </div>
+   <div class="modal-body">
+    <div class="row top20">
+      <div class="col-md-12">
+        <input class="form-control" name="term" [(ngModel)]="term" placeholder="Rechercher">
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover top20" [@fallIn]="state">
+        <thead>
+          <tr>
+            <th [class.active]="order === 'nom'" (click)="setOrder('nom')">Nom
+              <span [hidden]="reverse">&#9660;</span><span [hidden]="!reverse">&#9650;</span>
+            </th>
+            <th [class.active]="order === 'prenom'" (click)="setOrder('prenom')">Prénom
+              <span [hidden]="reverse">&#9660;</span><span [hidden]="!reverse">&#9650;</span>
+            </th>
+            <th style="cursor:default">&nbsp;</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let moniteur of moniteurs | filter:term:['nom', 'prenom'] 
+                                              | orderBy: order : reverse : 'case-insensitive'
+                                              | paginate: { id: 'paginationMoniteurModal', itemsPerPage: 10, currentPage: pageMoniteurModal }">
+            <td>{{moniteur.nom}}</td>
+            <td>{{moniteur.prenom}}</td>
+            <td>
+              <button class="btn btn-outline-success" type="button" (click)="addMoniteur(moniteur)">
+                <i class="fa fa-plus"></i>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="row top20 pull-right">
+      <div class="col-md-12">
+        <pagination-controls (pageChange)="pageMoniteurModal = $event"
+          id="paginationMoniteurModal"
+          directionLinks="true"
+          autoHide="true"
+          previousLabel="Précédent"
+          nextLabel="Suivant"
+        ></pagination-controls>
+      </div>
+   </div>
+  </div>
+</ng-template>

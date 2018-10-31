@@ -1,0 +1,250 @@
+
+<div class="container-fluid">
+  <div class="row top20">
+    <div class="col-md-6">
+      <label>Liste moniteur<span *ngIf="moniteurCount > 1">s</span> ({{ moniteurCount }})</label>
+    </div>
+    <div class="col-md-6">
+      <button class="btn btn-outline-info  my-2 my-sm-0 float-right" (click)="allDelete()" *ngIf="false">
+        <i class="fa fa-times fa-stack"></i>Tout supprimer
+      </button>
+      <span class="float-right" style="padding-left: 5px">&nbsp;</span>
+      <button class="btn btn-outline-danger  my-2 my-sm-0 float-right" (click)="exportCSV()">
+        <i class="fa fa-file-excel-o fa-stack"></i>Export
+      </button>
+      <span class="float-right" style="padding-left: 5px">&nbsp;</span>
+      <button class="btn btn-outline-info  my-2 my-sm-0 float-right" (click)="onAdd()">
+        <i class="fa fa-plus fa-stack"></i>Ajouter
+      </button>
+    </div>
+  </div>
+  <div class="row top20">
+    <div class="col-md-12">
+      <input class="form-control" name="term" [(ngModel)]="term" placeholder="Rechercher">
+    </div>
+  </div>
+  <div class="table-responsive top20" *ngIf="moniteurCount > 0">
+    <table class="table table-hover top20" [@fallIn]="state">
+      <thead>
+        <tr>
+          <th [class.active]="order === 'nom'" (click)="setOrder('nom')">Nom
+           <span [hidden]="reverse">&#9660;</span><span [hidden]="!reverse">&#9650;</span>
+          </th>
+          <th [class.active]="order === 'prenom'" (click)="setOrder('prenom')">Prénom
+           <span [hidden]="reverse">&#9660;</span><span [hidden]="!reverse">&#9650;</span>
+          </th>
+          <th [class.active]="order === 'telephone'" (click)="setOrder('telephone')">Téléphone
+           <span [hidden]="reverse">&#9660;</span><span [hidden]="!reverse">&#9650;</span>
+          </th>
+          <th [class.active]="order === 'certificat'" (click)="setOrder('certificat')">Certificat
+           <span [hidden]="reverse">&#9660;</span><span [hidden]="!reverse">&#9650;</span>
+          </th>
+          <th [class.active]="order === 'brevet'" (click)="setOrder('brevet')">Brevet
+           <span [hidden]="reverse">&#9660;</span><span [hidden]="!reverse">&#9650;</span>
+          </th>
+          <th [class.active]="order === 'dateNaissance'" (click)="setOrder('dateNaissance')">Date de naissance
+           <span [hidden]="reverse">&#9660;</span><span [hidden]="!reverse">&#9650;</span>
+          </th>
+          <th [class.active]="order === 'codePostal'" (click)="setOrder('codePostal')">Code Postal
+           <span [hidden]="reverse">&#9660;</span><span [hidden]="!reverse">&#9650;</span>
+          </th>
+          <th [class.active]="order === 'ville'" (click)="setOrder('ville')">Ville
+           <span [hidden]="reverse">&#9660;</span><span [hidden]="!reverse">&#9650;</span>
+          </th>
+          <th [class.active]="order === 'email'" (click)="setOrder('email')">Email
+           <span [hidden]="reverse">&#9660;</span><span [hidden]="!reverse">&#9650;</span>
+          </th>
+          <th style="cursor:default">&nbsp;</th>
+          <th style="cursor:default">&nbsp;</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let moniteur of moniteurs | filter:term:['nom', 'prenom', 'telephone', 'certificat', 'brevet', 'dateNaissance', 'ville', 'codePostal', 'email'] 
+                                              | orderBy: order : reverse : 'case-insensitive' 
+                                              | paginate: { id: 'paginationMoniteur', itemsPerPage: 10, currentPage: pageMoniteur }">
+          <td>{{moniteur.nom}}</td>
+          <td>{{moniteur.prenom}}</td>
+          <td>{{moniteur.telephone}}</td>
+          <td>{{moniteur.certificat | date : 'dd/MM/yyyy'}}</td>
+          <td>{{moniteur.brevet}}</td>
+          <td>{{moniteur.dateNaissance | date : 'dd/MM/yyyy'}}</td>
+          <td>{{moniteur.codePostal}}</td>
+          <td>{{moniteur.ville}}</td>
+          <td>{{moniteur.email}}</td>
+          <td>
+            <button class="btn btn-outline-info  my-2 my-sm-0 pull-right" (click)="onEdit(moniteur)">
+              <i class="fa fa-pencil"></i>
+            </button>
+          </td>
+          <td>
+            <button class="btn btn-outline-info  my-2 my-sm-0 pull-left" (click)="onDelete(moniteur)">
+              <i class="fa fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="row top20 pull-right">
+    <div class="col-md-12">
+      <pagination-controls (pageChange)="pageMoniteur = $event"
+        id="paginationMoniteur"
+        directionLinks="true"
+        autoHide="true"
+        previousLabel="Précédent"
+        nextLabel="Suivant"
+      ></pagination-controls>
+    </div>
+  </div>
+</div>
+
+<ng-template #modalConfirm let-close="close">
+  <div class="modal-header" [@moveInLeft]="state">
+    <h5 class="modal-title">Supprimer</h5>
+    <button type="button" class="btn btn-outline-info" (click)="close()">
+      <i class="fa fa-times"></i>
+    </button>
+  </div>
+   <div class="modal-body" [@fallIn]="state">
+    <div class="row">
+      <div class="col-md-12">
+        Etes-vous sûr de vouloir supprimer ce moniteur ?
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12 text-right">
+        <button class="btn btn-outline-success" type="button" (click)="isDelete(true)">
+          <i class="fa fa-check"></i>
+          Oui</button>
+        <button class="btn btn-outline-danger" type="button" (click)="isDelete(false)">
+          <i class="fa fa-times"></i>
+          Non</button>
+      </div>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #modalContent let-close="close">
+  <div class="modal-header" [@moveInLeft]="state">
+    <h5 class="modal-title">{{moniteurTextEdit}}</h5>
+    <button type="button" class="btn btn-outline-info" (click)="close()">
+      <i class="fa fa-times"></i>
+    </button>
+  </div>
+  <div class="modal-body" [@fallIn]="state">
+    <form #moniteurForm="ngForm" (ngSubmit)="onSubmit()">
+      <div class="row">
+        <div class="col-md-6 top20">
+          <label>Nom *</label>
+          <input class="form-control" name="nom" #position="ngModel" [(ngModel)]="moniteurService.selectedMoniteur.nom" placeholder="Nom" required>
+        </div>
+        <div class="col-md-6 top20">
+          <input type="hidden" name="$key" #$key="ngModel" [(ngModel)]="moniteurService.selectedMoniteur.$key">
+          <label>Prénom *</label>
+          <input class="form-control" name="prenom" #name="ngModel" [(ngModel)]="moniteurService.selectedMoniteur.prenom" placeholder="Prénom" required>
+        </div>
+      </div>
+      <div *ngIf="moniteurService.selectedMoniteur.prenom == ''
+          || moniteurService.selectedMoniteur.nom == ''"
+          class="row alert alert-danger top20">
+        <div *ngIf="moniteurService.selectedMoniteur.nom == ''" class="col-md-12">
+          Le nom est obligatoire.
+        </div>
+        <div *ngIf="moniteurService.selectedMoniteur.prenom == ''" class="col-md-12">
+          Le prénom est obligatoire.
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-6 top20">
+          <label>Date de naissance</label>
+          <input type="date" class="form-control" name="dateNaissance" #office="ngModel" [(ngModel)]="moniteurService.selectedMoniteur.dateNaissance" placeholder="Date de naissance">
+        </div>
+        <div class="col-md-6 top20"></div>
+      </div>
+      <div class="row">
+        <div class="col-md-6 top20">
+          <label>Certificat</label>
+          <input type="date" class="form-control" name="certificat" #position="ngModel" [(ngModel)]="moniteurService.selectedMoniteur.certificat" placeholder="Certificat">
+        </div>
+        <div class="col-md-6 top20"></div>
+      </div>
+      <div class="row">
+        <div class="col-md-6 top20">
+          <label>Code Postal</label>
+          <input class="form-control" name="codePostal" #position="ngModel" [(ngModel)]="moniteurService.selectedMoniteur.codePostal" placeholder="Code Postal">
+        </div>
+        <div class="col-md-6 top20"></div>
+      </div>
+      <div class="row">
+        <div class="col-md-6 top20">
+          <label>Ville</label>
+          <input class="form-control" name="ville" #position="ngModel" [(ngModel)]="moniteurService.selectedMoniteur.ville" placeholder="Ville">
+        </div>
+        <div class="col-md-6 top20"></div>
+      </div>
+      <div class="row top20">
+        <div class="col-md-6">
+          <label>Téléphone</label>
+          <input class="form-control" type="tel" name="telephone" #position="ngModel" [(ngModel)]="moniteurService.selectedMoniteur.telephone" placeholder="Téléphone">
+        </div>
+        <div class="col-md-6"></div>
+      </div>
+      <div class="row">
+        <div class="col-md-6 top20">
+          <label>Email</label>
+          <input class="form-control" name="email" #position="ngModel" [(ngModel)]="moniteurService.selectedMoniteur.email" placeholder="Email">
+        </div>
+        <div class="col-md-6 top20"></div>
+      </div>
+      <div class="row">
+        <div class="col-md-6 top20">
+          <label>Brevet</label>
+          <input class="form-control" name="brevet" #position="ngModel" [(ngModel)]="moniteurService.selectedMoniteur.brevet" placeholder="Brevet">
+        </div>
+        <div class="col-md-6 top20"></div>
+      </div>
+      <div class="row top20">
+        <div class="col-md-12"><label><h3>Personne à prévenir en cas d'accident</h3></label></div>
+      </div>
+      <div class="row">
+        <div class="col-md-6 top20">
+          <label>Nom</label>
+          <input class="form-control" name="nomAccident" #position="ngModel" [(ngModel)]="moniteurService.selectedMoniteur.nomAccident" placeholder="Nom">
+        </div>
+        <div class="col-md-6 top20">
+          <label>Prénom</label>
+          <input class="form-control" name="prenomAccident" #position="ngModel" [(ngModel)]="moniteurService.selectedMoniteur.prenomAccident" placeholder="Prénom">
+        </div>
+      </div>
+      <div class="row top20">
+        <div class="col-md-6">
+          <label>Téléphone</label>
+            <input class="form-control" name="telephoneAccident" #position="ngModel" [(ngModel)]="moniteurService.selectedMoniteur.telephoneAccident" placeholder="Téléphone">
+        </div>
+        <div class="col-md-6"></div>
+      </div>
+      <div class="row top20">
+        <div class="col-md-12 text-right">
+          <button class="btn btn-outline-success" type="submit" [disabled]="!moniteurForm.valid">
+            <i class="fa fa-check"></i>
+            Enregistrer
+          </button>
+          <button class="btn btn-outline-secondary" type="button" (click)="resetForm(moniteurForm)" *ngIf="isAdd">
+            <i class="fa fa-repeat"></i>
+            Reset
+          </button>
+          <button class="btn btn-outline-danger" type="button" (click)="onAbort()">
+            <i class="fa fa-times"></i>
+            Annuler
+          </button>
+        </div>
+      </div>
+      <div class="row top20 pull-right">
+        <div class="col-md-12">
+          Créé le {{moniteurService.selectedMoniteur.createdAt | date : 'dd/MM/yyyy'}} à {{moniteurService.selectedMoniteur.createdAt | date : 'HH:mm'}}, 
+          mis à jour le {{moniteurService.selectedMoniteur.updatedAt | date : 'dd/MM/yyyy'}} à {{moniteurService.selectedMoniteur.updatedAt | date : 'HH:mm'}}.
+        </div>
+      </div>
+    </form>
+  </div>
+</ng-template>
